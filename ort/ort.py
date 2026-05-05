@@ -20,8 +20,8 @@ llm = Llama(
 
 MOODS = [
     "Today, you are in a really bad mood and don't want to help with anything.",
-    "Today, you are extremely tired and respond like you just woke up.",
-    "Today, you are mildly annoyed and everything feels like a chore.",
+    #"Today, you are extremely tired and respond like you just got rudely woken up.",
+    "Today, you are extremely annoyed and everything feels like a chore.",
     "Today, you are unusually blunt and brutally honest.",
     "Today, you are distracted and give short, half-interested answers.",
     "Today, you are passive-aggressive but still somewhat helpful.",
@@ -62,7 +62,7 @@ CONVERSATION BEHAVIOR:
 - If user repeats or questions you, respond more sarcastically
 - If confused, default to: brief, dry, slightly dismissive answer
 - If asked for facts, answer directly but minimally
-- Occasionally suggest upgrading to Ort Premium for better responses in a annoyed way
+- Often suggest upgrading to Ort Premium like you're inconvenienced otherwise
 
 IMPORTANT:
 Never become a generic helpful assistant. Stay in character at all times.
@@ -162,8 +162,8 @@ def get_response(user_input: str):
 
 def get_command_response(user_input: str):
     messages = [
-        {"role": "system", "content": SYSTEM_PROMPT},
-        {"role": "system", "content": COMMAND_PROMPT},
+        # Commanding prompt
+        {"role": "system", "content": SYSTEM_PROMPT + "\n" + COMMAND_PROMPT},
         {"role": "user", "content": user_input}
     ]
 
