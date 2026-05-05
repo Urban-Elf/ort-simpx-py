@@ -233,7 +233,9 @@ class SimpleXBot:
                 if msg_text.startswith(self._command_prefix):
                     print(f"Handling command: {msg_text}")
                     await self._handle_command(msg_text[len(self._command_prefix):], chat_info, chat_item)
-                
+                else: # Only trigger if not a command
+                    await self.message_received(msg_text, chat_info)
+
                 # Auto-read messages if enabled (after processing)
                 if self._auto_read_messages:
                     await self._mark_chat_item_as_read(chat_info, chat_item)
@@ -241,6 +243,18 @@ class SimpleXBot:
             except Exception as e:
                 print(f"Error processing chat item: {e}")
     
+    async def message_received(self, msg_text, chat_info):
+        """
+        Event handler for received messages.
+        
+        This method can be overridden or used as a base for custom message handling.
+        
+        Args:
+            msg_text: The text content of the message
+            chat_item: The chat item dictionary
+        """
+        pass
+
     async def _mark_chat_item_as_read(self, chat_info: ChatInfo, chat_item: ChatItem):
         """Mark a specific chat item as read."""
         try:

@@ -399,6 +399,7 @@ class ChatClient:
     async def api_create_user_address(self) -> str:
         """Create a user contact address."""
         r = await self.send_chat_command({"type": "createMyAddress"})
+        print("Response from create_user_address:", r)  # Debug print
         if r["type"] == "userContactLinkCreated":
             return r["connReqContact"]
         raise ChatCommandError("Error creating user address", r)
