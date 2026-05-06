@@ -4,7 +4,6 @@ import random
 import os
 from datetime import date
 from rapidfuzz import fuzz
-from filter import ProfanityFilter
 import json
 
 # ================== CONFIG ==================
@@ -169,8 +168,6 @@ def build_messages(history):
     ]
 
 # ================== LLM ==================
-
-profanity_filter = ProfanityFilter()
 
 def get_response(user_input: str):
     global HISTORY

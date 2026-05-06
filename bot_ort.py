@@ -3,6 +3,7 @@ import os
 import random
 from types import MethodType
 import sys
+from ort.filter import ProfanityFilter
 from simpx import BotProfile, SimpleXBot
 from ort import ort
 
@@ -103,6 +104,7 @@ async def handle_connection(response):
   display_name = contact.get("profile", {}).get("displayName", "Unknown")
   print(f"{display_name} connected!")
 
+profanity_filter = ProfanityFilter()
 
 async def handle_message(self, msg_text, chat_info):
     if (msg_text is None) or (chat_info is None):
@@ -112,10 +114,10 @@ async def handle_message(self, msg_text, chat_info):
     result = ort.should_respond(msg_text)
     if result["respond"]:
         reply = ort.get_response(msg_text)
-        await bot.send_message(chat_info, reply)
+        await bot.send_message(chat_info, profanity_filter.filter_text(reply))
     else:
         if result["response"] is not None:
-            await bot.send_message(chat_info, result["response"])
+            await bot.send_message(chat_info, profanity_filter.filter_text(result["response"]))
 
 bot.message_received = MethodType(handle_message, bot)
 
