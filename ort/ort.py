@@ -190,7 +190,7 @@ def get_response(user_input: str):
 
     history.append({"role": "llm", "content": reply})
 
-    return profanity_filter.filter_text(reply.strip())
+    return reply.strip()
 
 def get_command_response(user_input: str):
     messages = [
@@ -207,7 +207,7 @@ def get_command_response(user_input: str):
     )
 
     reply = output["choices"][0]["message"]["content"].strip()
-    return profanity_filter.filter_text(reply)
+    return reply
 
 # ================== CONTROL ==================
 
