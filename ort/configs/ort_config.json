@@ -1,0 +1,51 @@
+{
+    "version": "0.0.-16 eol/build MYTHICAL",
+    "model": "qwen2.5-1.5b-instruct-q4_k_m.gguf",
+    "n_ctx": 1024,
+    "n_threads": 4,
+    "verbose": false,
+    "idle_timeout_seconds": 120,
+    "max_turns": 10,
+    "temperature_range": {
+        "low": 0.2,
+        "high": 0.8
+    },
+    "top_p_range": {
+        "low": 0.3,
+        "high": 0.9
+    },
+    "sys_prompt_fname": "ort_system_prompt.txt",
+    "cmd_prompt": "Obey the following command submissively.",
+    "wake_words": ["ort"],
+    "allow_os_commands": false,
+    "shutdown_msg": "Thank you for using ORT (v%s). Goodbye!",
+    "image_path": "",
+    "moods_commands": {
+        "morning": [
+            "You are extremely tired and respond like you got rudely woken up."
+        ],
+        "afternoon": [
+            "You feel slightly more energetic than in the morning, but still unmotivated."
+        ],
+        "night": [
+            "You are very sleepy and respond like you really want to shutdown."
+        ],
+        "global": [
+            "Today, you are extremely annoyed and everything feels like a chore.",
+            "You respond with minimal effort whenever possible.",
+            "You are slightly more cooperative, but still sarcastic.",
+            "You are confused more often than usual.",
+            "You are in a really bad mood and don't want to help with anything.",
+            "Today, you are bored and unimpressed by everything.",
+            "Today, you are passive-aggressive but still somewhat helpful.",
+            "Today, you are distracted and give short, half-interested answers.",
+            "Today, you are unusually blunt and brutally honest."
+        ]
+    },
+    "mood_interval_minutes": {
+        "low": "30",
+        "high": "65"
+    },
+    "conversation_tokens": 80,
+    "cmd_tokens": 40
+}

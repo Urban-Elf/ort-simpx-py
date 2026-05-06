@@ -1,11 +1,12 @@
 import asyncio
 import os
+import random
 from types import MethodType
 import sys
 from simpx import BotProfile, SimpleXBot
 from ort import ort
 
-ALLOW_SYSTEM_CONTROL = False
+ort.load_default_config()
 
 # 1. Create a bot profile (can be saved/loaded)
 # If a profile with this name exists, it will be loaded.
@@ -18,7 +19,7 @@ profile = BotProfile(
     welcome_message="...",
     # Optional: Set command prefix (default is "!")
     command_prefix="!ort_",
-    # TODO: image=
+    image=ort.CONFIG.image_path
 )
 
 # 2. Create the bot instance
@@ -35,12 +36,11 @@ async def info_command(chat_info, profile):
         f"Description: {profile.description}\n"
         f"Address: {profile.address}"
     )
-
 @bot.command(name="shutdown", help="Shutdown bot")
 async def shutdown_command(chat_info, args):
     await bot.send_message(
         chat_info,
-        "Thank you for using ORT (v0.0.0-eol).\nShutting down now.")
+        ort.CONFIG.shutdown_msg % ort.CONFIG.version)
     await bot.close()
     sys.exit(0)
 
@@ -49,9 +49,9 @@ async def shutdown_command(chat_info, args):
 async def shutdown_command(chat_info, args):
     await bot.send_message(
         chat_info,
-        "Thank you for using ORT (v0.0.0-eol).\nShutting down OS now.")
+        ort.CONFIG.shutdown_msg % ort.CONFIG.version)
     await bot.close()
-    if ALLOW_SYSTEM_CONTROL:
+    if ort.CONFIG.allow_os_commands:
         if sys.platform == "win32":
             os.system("shutdown /s /t 1")
         elif sys.platform == "linux":
@@ -61,6 +61,39 @@ async def shutdown_command(chat_info, args):
         else:
             print("Unsupported OS for shutdown command.")
     sys.exit(0)
+
+@bot.command(name="load_config", help="Temporarily switch LLM config")
+async def load_config_command(chat_info, args):
+    err_msg = None
+    if (args is None) or (len(args.strip()) == 0):
+        err_msg = "!4 Please provide a config name to load.!"
+        return
+    elif not os.path.exists(args.strip()):
+        err_msg = f"!4 Config file not found.!"
+    if err_msg:
+        await bot.send_message(chat_info, err_msg)
+    try:
+        ort.load_config(args)
+        await bot.send_message(
+            chat_info,
+            "!2 Switched config -> '" + args + "'!")
+    except Exception as e:
+        await bot.send_message(
+            chat_info,
+            f"!1 Load failed: {str(e)}")
+        
+
+@bot.command(name="reload_config", help="Reload current LLM config")
+async def reload_config(chat_info, args):
+    try:
+        ort.load_config(ort.CONFIG_PATH)
+        await bot.send_message(
+            chat_info,
+            "!1 Reload successful.!")
+    except Exception as e:
+        await bot.send_message(
+            chat_info,
+            f"!2 Reload failed: {str(e)}!")
 
 # 4. Define event handlers (optional)
 @bot.event("contactConnected")
@@ -76,9 +109,13 @@ async def handle_message(self, msg_text, chat_info):
         return
     if (len(msg_text.strip()) == 0):
         return
-    if ort.should_respond(msg_text):
+    result = ort.should_respond(msg_text)
+    if result["respond"]:
         reply = ort.get_response(msg_text)
         await bot.send_message(chat_info, reply)
+    else:
+        if result["response"] is not None:
+            await bot.send_message(chat_info, result["response"])
 
 bot.message_received = MethodType(handle_message, bot)
 

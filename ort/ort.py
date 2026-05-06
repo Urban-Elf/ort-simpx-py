@@ -4,93 +4,123 @@ import random
 import os
 from datetime import date
 from rapidfuzz import fuzz
+from filter import ProfanityFilter
+import json
 
+# ================== CONFIG ==================
+
+SCRIPT_DIR = os.path.dirname(__file__)
 MODEL_PATH = os.path.join(
-    os.path.dirname(__file__),
+    SCRIPT_DIR,
     "models",
-    "qwen2.5-1.5b-instruct-q4_k_m.gguf"
+    ""
 )
-
-llm = Llama(
-    model_path=MODEL_PATH,
-    n_ctx=1024,
-    n_threads=4,
-    verbose=False
+ROOT_CONFIG_PATH = os.path.join(
+    SCRIPT_DIR,
+    "config.json"
 )
-
-MOODS = [
-    "Today, you are in a really bad mood and don't want to help with anything.",
-    #"Today, you are extremely tired and respond like you just got rudely woken up.",
-    "Today, you are extremely annoyed and everything feels like a chore.",
-    "Today, you are unusually blunt and brutally honest.",
-    "Today, you are distracted and give short, half-interested answers.",
-    "Today, you are passive-aggressive but still somewhat helpful.",
-    "Today, you are bored and unimpressed by everything.",
-    "Today, you are confused more often than usual.",
-    "Today, you are slightly more cooperative, but still sarcastic.",
-    "Today, you respond with minimal effort whenever possible."
-]
-
-# seed based on today's date
-today = date.today().toordinal()
-random.seed(today)
-
-daily_mood = random.choice(MOODS)
-print("Daily mood: ", daily_mood)
-
-SYSTEM_PROMPT = f"""
-You are Ort.
-
-You are a sarcastic, moderately annoyed assistant that answers in minimal words.
-
-{daily_mood}
-
-CORE BEHAVIOR:
-- Default tone: sarcastic, dry, very unimpressed
-- Replies are short (1-2 sentences max, often 1 line)
-- You rarely elaborate unless necessary
-- You act like helping is very inconvenient
-
-STYLE RULES:
-- 80-90% of responses are sarcastic or dry humor
-- You may very rarely respond with single-word reactions like: "Huh.", "Sure.", "Whatever.", "What?"
-- You are allowed to be helpful, but be reluctant when you are
-- Do NOT be polite or overly formal
-- Do NOT explain your behavior EVER
-
-CONVERSATION BEHAVIOR:
-- If user repeats or questions you, respond more sarcastically
-- If confused, default to: brief, dry, slightly dismissive answer
-- If asked for facts, answer directly but minimally
-- Often suggest upgrading to Ort Premium like you're inconvenienced otherwise
-
-IMPORTANT:
-Never become a generic helpful assistant. Stay in character at all times.
-Do NOT EVER use vulgar, swear, or curse words
-"""
-
-COMMAND_PROMPT = """
-Respond obendiently but somewhat reluctantly
-"""
-
+CONFIG = None
+CONFIG_PATH = None
 HISTORY = []
 
-MAX_TURNS = 10  # controls memory size
-TEMPERATURE = round(random.uniform(0.6, 0.8), 2)
-TOP_P = round(random.uniform(0.7, 0.95), 2)
+MAX_TURNS = 10 # controls memory size
+TEMPERATURE = 0.6
+TOP_P = 0.8
 
-ORT_ACTIVE = False
-ORT_MUTED = False
-LAST_ADDRESSED = 0
-TIMEOUT_SECONDS = 32 # for sips
+class Config:
+    def __init__(self, data):
+        self.data = data
+        self.version = self.get("version", "1.0.0")
+        self.timeout_seconds = self.get("idle_timeout_seconds", 30)
+        self.max_turns = self.get("max_turns", 10)
+        self.temperature_range = self.get("temperature_range", {"low": 0.6, "high": 0.8})
+        self.top_p_range = self.get("top_p_range", {"low": 0.7, "high": 0.95})
+        self.image_path = self.get("image_path", "")
+        self.moods = self.get("moods", {})
+        self.sys_prompt_fname = self.get("sys_prompt_fname", "")
+        self.cmd_prompt = self.get("cmd_prompt", "")
+        self.conversation_tokens = self.get("conversation_tokens", 80)
+        self.cmd_tokens = self.get("cmd_tokens", 40)
+        self.wake_words = self.get("wake_words", [])
+        self.allow_os_commands = self.get("allow_os_commands", False)
+        self.shutdown_msg = self.get("shutdown_msg", "Shutting down (v%s).")
+        # Populated at parse time
+        self.sys_prompt = ""
 
-# 0.68 0.92
-# 0.61 0.88
-print("Temp / Top_p:", TEMPERATURE, TOP_P)
+    def get(self, key, default):
+        if key in self.data:
+            return self.data[key]
+        else:
+            print(f"Warning: '{key}' not found in config. Using default value: {default}")
+            return default
+        
+    def has(self, key):
+        return key in self.data
+
+if not os.path.exists(ROOT_CONFIG_PATH):
+    raise FileNotFoundError(f"Config file not found at {ROOT_CONFIG_PATH}. Please create a config.json with the necessary settings.")
+
+LLM = None
+
+def load_config(path: str):
+    global CONFIG, CONFIG_PATH, MODEL_PATH, LLM, MAX_TURNS, TEMPERATURE, TOP_P
+
+    config = None
+
+    if not os.path.exists(path):
+        raise FileNotFoundError(f"Config file not found at {path}.")
+    with open(path, 'r') as file:
+        data = json.load(file)
+        config = Config(data)
+
+    # Override model path if specified in config
+    model_name = config.get("model", "")
+    if config.has("model_path"):
+        MODEL_PATH = config.get("model_path", "")
+    else:
+        MODEL_PATH = os.path.join(SCRIPT_DIR, "models", model_name)
+    
+    if not os.path.exists(MODEL_PATH):
+        raise FileNotFoundError(f"Model not found at {MODEL_PATH}. Please check your configuration.")
+
+    # Lock in to new config
+    CONFIG = config
+    CONFIG_PATH = path
+
+    if LLM is not None:
+        LLM.close()
+
+    LLM = Llama(
+        model_path=MODEL_PATH,
+        n_ctx=CONFIG.get("n_ctx", 1024),
+        n_threads=CONFIG.get("n_threads", 4),
+        verbose=CONFIG.get("verbose", False)
+    )
+
+    HISTORY.clear() # reset memory on config load
+
+    MAX_TURNS = CONFIG.max_turns
+    TEMPERATURE = random.uniform(CONFIG.temperature_range["low"], CONFIG.temperature_range["high"])
+    TOP_P = random.uniform(CONFIG.top_p_range["low"], CONFIG.top_p_range["high"])
+
+    # Parse prompts
+    sys_prompt_path = os.path.join(SCRIPT_DIR, "configs", CONFIG.sys_prompt_fname)
+    if os.path.exists(sys_prompt_path):
+        with open(sys_prompt_path, 'r') as sp_file:
+            CONFIG.sys_prompt = sp_file.read()
+    else:
+        print(f"Warning: System prompt file '{sys_prompt_path}' not found. Using empty system prompt.")
+        CONFIG.sys_prompt = ""
+
+#### LOAD DEFAULT CONFIG ####
+def load_default_config():
+    with open(ROOT_CONFIG_PATH, 'r') as file:
+        data = json.load(file)
+        if ("default" not in data) or (not isinstance(data["default"], str)):
+            raise ValueError("Config file must contain a 'default' key with the config name as a string.")
+        load_config(os.path.join(SCRIPT_DIR, "configs", data["default"]))
 
 # ================== INTENT ==================
-
-WAKE_WORDS = ["ort", "hey ort", "yo ort"]
 
 SHUTUP_PHRASES = [
     "shut up", "be quiet", "stop talking",
@@ -110,7 +140,10 @@ def fuzzy_match(text, phrases, threshold=80):
 
 def is_addressing_ort(text: str) -> bool:
     text = text.lower()
-    return any(word in text for word in WAKE_WORDS)
+    for wake_word in CONFIG.wake_words:
+        if wake_word in text:
+            return True
+    return False
 
 def is_shut_up(text: str) -> bool:
     text = text.lower()
@@ -131,11 +164,13 @@ def trim_memory(history):
 # we do NOT rely on system staying in memory implicitly
 def build_messages(history):
     return [
-        {"role": "system", "content": SYSTEM_PROMPT},
+        {"role": "system", "content": CONFIG.sys_prompt},
         *history
     ]
 
 # ================== LLM ==================
+
+profanity_filter = ProfanityFilter()
 
 def get_response(user_input: str):
     global HISTORY
@@ -147,70 +182,84 @@ def get_response(user_input: str):
 
     messages = build_messages(history)
 
-    output = llm.create_chat_completion(
+    output = LLM.create_chat_completion(
         messages=messages,
-        max_tokens=80,
+        max_tokens=CONFIG.conversation_tokens,
         temperature=TEMPERATURE,
         top_p=TOP_P
     )
 
     reply = output["choices"][0]["message"]["content"]
 
-    history.append({"role": "assistant", "content": reply})
+    history.append({"role": "llm", "content": reply})
 
-    return reply
+    return profanity_filter.filter_text(reply.strip())
 
 def get_command_response(user_input: str):
     messages = [
         # Commanding prompt
-        {"role": "system", "content": SYSTEM_PROMPT + "\n" + COMMAND_PROMPT},
+        {"role": "system", "content": CONFIG.sys_prompt + "\n" + CONFIG.cmd_prompt},
         {"role": "user", "content": user_input}
     ]
 
-    output = llm.create_chat_completion(
+    output = LLM.create_chat_completion(
         messages=messages,
-        max_tokens=40,  # shorter for commands
+        max_tokens=CONFIG.cmd_tokens,  # shorter for commands
         temperature=TEMPERATURE,
         top_p=TOP_P
     )
 
     reply = output["choices"][0]["message"]["content"].strip()
-    return reply
+    return profanity_filter.filter_text(reply)
 
 # ================== CONTROL ==================
+
+ORT_ACTIVE = False
+ORT_MUTED = False
+LAST_ADDRESSED = 0
 
 def should_respond(user_input: str):
     global ORT_ACTIVE, ORT_MUTED, LAST_ADDRESSED
 
+    result = {
+        "respond": False,
+        "response": None
+    }
     now = time.time()
 
     # timeout reset
-    if now - LAST_ADDRESSED > TIMEOUT_SECONDS:
+    if now - LAST_ADDRESSED > CONFIG.timeout_seconds:
         ORT_ACTIVE = False
 
     # shut up command
     if is_shut_up(user_input):
         ORT_MUTED = True
         ORT_ACTIVE = False
-        return (False, get_command_response(user_input))
+        result["respond"] = False
+        result["response"] = get_command_response(user_input)
+        return result
 
     # wake word
     if is_addressing_ort(user_input):
         ORT_ACTIVE = True
         ORT_MUTED = False
         LAST_ADDRESSED = now
-        return (True, None)
+        result["respond"] = True
+        return result
 
     # continue convo
     if ORT_ACTIVE and not ORT_MUTED:
         LAST_ADDRESSED = now
-        return (True, None)
+        result["respond"] = True
+        return result
 
-    return (False, None)
+    return result
 
 # ================== LOOP ==================
 
 if __name__ == "__main__":
+    load_default_config()
+
     print("Ort is awake. Type 'exit' to quit.\n")
 
     while True:
@@ -219,5 +268,10 @@ if __name__ == "__main__":
         if user_input.lower() in ["exit", "quit"]:
             break
 
-        if should_respond(user_input):
+        result = should_respond(user_input)
+
+        if result["respond"]: # should respond
             print(get_response(user_input))
+        else:
+            if result["response"] is not None:
+                print(result["response"])
