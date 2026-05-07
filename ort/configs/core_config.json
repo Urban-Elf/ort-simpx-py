@@ -14,7 +14,7 @@
         "low": 0.3,
         "high": 0.9
     },
-    "sys_prompt_fname": "ort_system_prompt.txt",
+    "sys_prompt_fname": "core_system_prompt.txt",
     "cmd_prompt": "Obey the following command submissively.",
     "wake_words": ["ort"],
     "allow_os_commands": false,
