@@ -4,7 +4,10 @@
     "description": "Edge-cutting AI assistant.",
     "welcome_msg": "...",
     "command_prefix": "!ort_",
-    "image_path": null,
+    "image_path": {
+        "path": "icon.png",
+        "absolute": false
+    },
     "version": "0.0.-24 eol/build MYTHICAL",
     "model": "qwen2.5-1.5b-instruct-q4_k_m.gguf",
     "n_ctx": 1024,

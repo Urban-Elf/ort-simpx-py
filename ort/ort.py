@@ -34,12 +34,12 @@ class Config:
         self.description = self.get("description", "A LLM assistant.")
         self.welcome_msg = self.get("welcome_msg", "Hello, how can I help?")
         self.command_prefix = self.get("command_prefix", "!llm")
+        self.image_path = self.get("image_path", {"path": None, "absolute": True})
         self.version = self.get("version", "1.0.0")
         self.timeout_seconds = self.get("idle_timeout_seconds", 30)
         self.max_turns = self.get("max_turns", 10)
         self.temperature_range = self.get("temperature_range", {"low": 0.6, "high": 0.8})
         self.top_p_range = self.get("top_p_range", {"low": 0.7, "high": 0.95})
-        self.image_path = self.get("image_path", None)
         self.moods = self.get("moods", {})
         self.sys_prompt_fname = self.get("sys_prompt_fname", "")
         self.cmd_prompt = self.get("cmd_prompt", "")
@@ -50,6 +50,10 @@ class Config:
         self.shutdown_msg = self.get("shutdown_msg", "Shutting down (v%s).")
         # Populated at parse time
         self.sys_prompt = ""
+
+        # If not absolute path, make relative to configs directory
+        if self.image_path and not self.image_path.get("absolute", True):
+            self.image_path["path"] = os.path.join(SCRIPT_DIR, "configs", self.image_path["path"])
 
     def get(self, key, default):
         if key in self.data:
