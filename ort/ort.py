@@ -66,7 +66,7 @@ if not os.path.exists(ROOT_CONFIG_PATH):
 
 LLM = None
 
-def load_config(path: str, abs: False):
+def load_config(path: str, abs=False):
     global CONFIG, CONFIG_PATH, MODEL_PATH, LLM, MAX_TURNS, TEMPERATURE, TOP_P
 
     config = None
