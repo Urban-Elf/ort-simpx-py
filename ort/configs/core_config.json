@@ -1,10 +1,16 @@
 {
-    "version": "0.0.-16 eol/build MYTHICAL",
+    "name": "Ort",
+    "full_name": "ORT (ORT Requires [more] Training)",
+    "description": "Edge-cutting AI assistant.",
+    "welcome_msg": "...",
+    "command_prefix": "!ort_",
+    "image_path": null,
+    "version": "0.0.-24 eol/build MYTHICAL",
     "model": "qwen2.5-1.5b-instruct-q4_k_m.gguf",
     "n_ctx": 1024,
     "n_threads": 4,
     "verbose": false,
-    "idle_timeout_seconds": 120,
+    "idle_timeout_seconds": 240,
     "max_turns": 10,
     "temperature_range": {
         "low": 0.2,
@@ -19,7 +25,6 @@
     "wake_words": ["ort"],
     "allow_os_commands": false,
     "shutdown_msg": "Thank you for using ORT (v%s). Goodbye!",
-    "image_path": "",
     "moods_commands": {
         "morning": [
             "You are extremely tired and respond like you got rudely woken up."
@@ -43,8 +48,8 @@
         ]
     },
     "mood_interval_minutes": {
-        "low": "30",
-        "high": "65"
+        "low": 30,
+        "high": 65
     },
     "conversation_tokens": 80,
     "cmd_tokens": 40

@@ -13,13 +13,13 @@ ort.load_default_config()
 # If a profile with this name exists, it will be loaded.
 # Otherwise, a new one is created on the server.
 profile = BotProfile(
-    display_name="Ort",
-    full_name="Ort",
-    description="Cutting-edge AI assistant.",
+    display_name=ort.CONFIG.name,
+    full_name=ort.CONFIG.full_name,
+    description=ort.CONFIG.description,
     # Optional: Welcome message for new contacts
-    welcome_message="...",
+    welcome_message=ort.CONFIG.welcome_msg,
     # Optional: Set command prefix (default is "!")
-    command_prefix="!ort_",
+    command_prefix=ort.CONFIG.command_prefix,
     image=ort.CONFIG.image_path
 )
 
