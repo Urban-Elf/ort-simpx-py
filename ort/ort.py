@@ -29,12 +29,17 @@ TOP_P = 0.8
 class Config:
     def __init__(self, data):
         self.data = data
+        self.name = self.get("name", "LLM"),
+        self.full_name = self.get("full_name", "LLM")
+        self.description = self.get("description", "A LLM assistant.")
+        self.welcome_msg = self.get("welcome_msg", "Hello, how can I help?")
+        self.command_prefix = self.get("command_prefix", "!llm")
         self.version = self.get("version", "1.0.0")
         self.timeout_seconds = self.get("idle_timeout_seconds", 30)
         self.max_turns = self.get("max_turns", 10)
         self.temperature_range = self.get("temperature_range", {"low": 0.6, "high": 0.8})
         self.top_p_range = self.get("top_p_range", {"low": 0.7, "high": 0.95})
-        self.image_path = self.get("image_path", "")
+        self.image_path = self.get("image_path", None)
         self.moods = self.get("moods", {})
         self.sys_prompt_fname = self.get("sys_prompt_fname", "")
         self.cmd_prompt = self.get("cmd_prompt", "")
@@ -61,10 +66,14 @@ if not os.path.exists(ROOT_CONFIG_PATH):
 
 LLM = None
 
-def load_config(path: str):
+def load_config(path: str, abs: False):
     global CONFIG, CONFIG_PATH, MODEL_PATH, LLM, MAX_TURNS, TEMPERATURE, TOP_P
 
     config = None
+
+    # Keep relative to internal configs directory
+    if not abs:
+        path = os.path.join(SCRIPT_DIR, "configs", path)
 
     if not os.path.exists(path):
         raise FileNotFoundError(f"Config file not found at {path}.")
@@ -128,26 +137,24 @@ SHUTUP_PHRASES = [
     "no more", "that's it", "stop now",
     "go away", "leave me alone", "don't respond",
     "hush", "zip it", "button it", "keep quiet",
-    "cease and desist", "hold your tongue", "enough already"
+    "cease and desist", "hold your tongue", "enough already",
+    "that will be all"
 ]
 
-def fuzzy_match(text, phrases, threshold=80):
+def fuzzy_match(text, phrases, threshold=70):
     for phrase in phrases:
         if fuzz.partial_ratio(text.lower(), phrase) > threshold:
             return True
     return False
 
 def is_addressing_ort(text: str) -> bool:
-    text = text.lower()
-    for wake_word in CONFIG.wake_words:
-        if wake_word in text:
-            return True
-    return False
+    words = text.lower().split()
+    return any(wake_word in words for wake_word in CONFIG.wake_words)
 
 def is_shut_up(text: str) -> bool:
     text = text.lower()
 
-    if "ort" not in text:
+    if not is_addressing_ort(text):
         return False
 
     if any(p in text for p in SHUTUP_PHRASES):
