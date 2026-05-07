@@ -1,6 +1,6 @@
 {
-    "name": "Ort",
-    "full_name": "ORT (ORT Requires [more] Training)",
+    "profile_name": "Ort",
+    "display_name": "Ort",
     "description": "Edge-cutting AI assistant.",
     "welcome_msg": "...",
     "command_prefix": "!ort_",

@@ -13,8 +13,8 @@ ort.load_default_config()
 # If a profile with this name exists, it will be loaded.
 # Otherwise, a new one is created on the server.
 profile = BotProfile(
-    display_name=ort.CONFIG.name,
-    full_name=ort.CONFIG.full_name,
+    display_name=ort.CONFIG.display_name,
+    full_name=ort.CONFIG.profile_name,
     description=ort.CONFIG.description,
     # Optional: Welcome message for new contacts
     welcome_message=ort.CONFIG.welcome_msg,

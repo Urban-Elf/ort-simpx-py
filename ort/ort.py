@@ -29,8 +29,8 @@ TOP_P = 0.8
 class Config:
     def __init__(self, data):
         self.data = data
-        self.name = self.get("name", "LLM"),
-        self.full_name = self.get("full_name", "LLM")
+        self.profile_name = self.get("profile_name", "LLM"),
+        self.display_name = self.get("display_name", "LLM")
         self.description = self.get("description", "A LLM assistant.")
         self.welcome_msg = self.get("welcome_msg", "Hello, how can I help?")
         self.command_prefix = self.get("command_prefix", "!llm")
