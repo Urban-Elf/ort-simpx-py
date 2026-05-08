@@ -20,7 +20,7 @@ profile = BotProfile(
     welcome_message=ort.CONFIG.welcome_msg,
     # Optional: Set command prefix (default is "!")
     command_prefix=ort.CONFIG.command_prefix,
-    image=ort.CONFIG.image_path
+    image=ort.CONFIG.image_path["path"]
 )
 
 # 2. Create the bot instance
