@@ -135,14 +135,16 @@ def load_default_config():
 # ================== INTENT ==================
 
 SHUTUP_PHRASES = [
-    "shut up", "be quiet", "stop talking",
-    "stop responding", "go silent", "mute yourself",
-    "shut it", "quiet", "enough", "silence",
-    "no more", "that's it", "stop now",
-    "go away", "leave me alone", "don't respond",
-    "hush", "zip it", "button it", "keep quiet",
+    "shut up", "be quiet", "stop talking", "take a nap",
+    "stop responding", "go silent", "mute yourself", "mute,"
+    "shut it", "quiet", "enough", "silence", "sleep",
+    "no more", "that's it", "stop now", "and cut that out",
+    "go away", "leave me alone", "leave us alone", "don't respond",
+    "hush", "zip it", "button it", "keep quiet", "take a vow of silence",
     "cease and desist", "hold your tongue", "enough already",
-    "that will be all"
+    "that will be all", "be silent", "keep your forked tongue behind your teeth",
+    "shush", "pipe down", "get lost", "take a hike", "get out of here",
+    "get outta here", "scram", "leave us", "leave me", "beat it", "my ears are bleeding"
 ]
 
 def fuzzy_match(text, phrases, threshold=70):

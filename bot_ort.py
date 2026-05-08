@@ -45,7 +45,7 @@ async def shutdown_command(chat_info, args):
     await bot.close()
     sys.exit(0)
 
-# Really handy if you're running headless, but be careful not to run on test machines
+# Really handy if you're running headless, but be careful not to run on test machines. Alternatively, ignore all warnings. YOLO, my dude.
 @bot.command(name="shutdown_os", help="Shutdown bot and OS")
 async def shutdown_command(chat_info, args):
     await bot.send_message(
@@ -60,7 +60,7 @@ async def shutdown_command(chat_info, args):
         elif sys.platform == "darwin":
             os.system("sudo shutdown -h now")
         else:
-            print("Unsupported OS for shutdown command.")
+            print("Unsupported OS for shutdown command. Try not using a mobile device.")
     sys.exit(0)
 
 @bot.command(name="load_config", help="Temporarily switch LLM config")
@@ -123,7 +123,7 @@ bot.message_received = MethodType(handle_message, bot)
 
 # 5. Start the bot
 if __name__ == "__main__":
-    print("Starting bot...")
+    print("Starting bot... This little maneuver is going to cost us fifty-one years.")
     # Ensure your SimpleX Chat Console (simplex-chat) backend is running
     # The bot will connect via WebSocket (default: ws://127.0.0.1:5225)
     # You can specify a different server_url in SimpleXBot constructor if needed

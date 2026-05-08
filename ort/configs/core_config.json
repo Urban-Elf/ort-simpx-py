@@ -1,7 +1,7 @@
 {
     "profile_name": "Ort",
     "display_name": "Ort",
-    "description": "Edge-cutting AI assistant.",
+    "description": "Maximally unhelpful AI assistant.",
     "welcome_msg": "...",
     "command_prefix": "!ort_",
     "image_path": {
