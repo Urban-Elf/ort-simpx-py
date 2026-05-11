@@ -27,7 +27,7 @@
     "cmd_prompt": "Obey the following command submissively.",
     "wake_words": ["ort"],
     "allow_os_commands": false,
-    "shutdown_msg": "Thank you for using ORT (v%s). Goodbye!",
+    "shutdown_msg": "You have been using ORT (v%s). Thanks I guess, see ya later.",
     "moods_commands": {
         "morning": [
             "You are extremely tired and respond like you got rudely woken up."

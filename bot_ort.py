@@ -130,7 +130,7 @@ if __name__ == "__main__":
     try:
         asyncio.run(bot.start())
     except KeyboardInterrupt:
-        print("Bot stopped.")
+        print("Bot stopped. Hasta la vista.")
     finally:
         # Optional cleanup
         asyncio.run(bot.close())
